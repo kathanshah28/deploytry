@@ -322,6 +322,13 @@ def process_machine_unit(machine_id, row_idx):
                 return v.tolist()
             else:
                 return v
+            
+        results = make_predictions(test_df, models)
+        # For each key in results, force conversion if necessary:
+        results = {
+            k: convert_value(v)
+            for k, v in results.items()
+        }
 
         important_features = {
             'id': machine_id,
@@ -335,6 +342,12 @@ def process_machine_unit(machine_id, row_idx):
             'power_consumption_W': convert_value(test_df.get('power_consumption_W', 5000)),
             'cutting_force_N': convert_value(test_df.get('cutting_force_N', 200)),
         }
+
+        # Debug log each key-value pair and its type after conversion
+        for key, value in important_features.items():
+            conv_value = convert_value(value)
+            logger.debug(f"{key}: raw={value} (type: {type(value)}), converted={conv_value} (type: {type(conv_value)})")
+        
 
         # Prepare SQL INSERT dynamically
         columns = ', '.join(important_features.keys())
