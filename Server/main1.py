@@ -261,7 +261,11 @@ def process_machine_unit(machine_id, row_idx):
         # Prepare SQL INSERT dynamically
         columns = ', '.join(important_features.keys())
         placeholders = ', '.join(['%s'] * len(important_features))
-        values = list(important_features.values())
+        # values = list(important_features.values())
+
+        # Convert all numpy types to native Python types
+        values = [v.item() if isinstance(v, (np.generic, np.bool_)) else v for v in important_features.values()]
+
 
         # Build query
         query = f'''
