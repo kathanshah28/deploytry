@@ -162,4 +162,4 @@ def get_machine_predictions(machine_id):
         return jsonify({'error': 'No predictions found for this machine'}), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000)
