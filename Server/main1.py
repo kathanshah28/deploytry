@@ -292,7 +292,6 @@ def get_db_connection():
 #     except Exception as e:
 #         logger.error(f"Error processing machine {machine_id}: {e}")
 #         return False
-
 def process_machine_unit(machine_id, row_idx):
     try:
         # Read the CSV file
@@ -311,36 +310,36 @@ def process_machine_unit(machine_id, row_idx):
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        # Convert numpy types to native Python types
+        def convert_value(v):
+            if isinstance(v, (np.integer, np.int32, np.int64)):
+                return int(v)
+            elif isinstance(v, (np.float32, np.float64)):
+                return float(v)
+            elif isinstance(v, (np.bool_)):
+                return bool(v)
+            elif isinstance(v, np.ndarray):
+                return v.tolist()
+            else:
+                return v
+
         important_features = {
             'id': machine_id,
-            'timestamp': test_df['id'],
-            'anomaly_score': float(results['anomaly_score']),
+            'timestamp': str(test_df['id']),  # Ensure timestamp is string
+            'anomaly_score': convert_value(results['anomaly_score']),
             'predicted_anomaly': str(results['predicted_anomaly']),
             'predicted_anomaly_type': str(results['predicted_anomaly_type']), 
-            'predicted_health_score': float(results['predicted_health_score']),
-            'predicted_days_to_maintenance': float(results['predicted_days_to_maintenance']),
-            'motor_temp_C': float(test_df.get('motor_temp_C', 60)),
-            'power_consumption_W': float(test_df.get('power_consumption_W', 5000)),
-            'cutting_force_N': float(test_df.get('cutting_force_N', 200)),
+            'predicted_health_score': convert_value(results['predicted_health_score']),
+            'predicted_days_to_maintenance': convert_value(results['predicted_days_to_maintenance']),
+            'motor_temp_C': convert_value(test_df.get('motor_temp_C', 60)),
+            'power_consumption_W': convert_value(test_df.get('power_consumption_W', 5000)),
+            'cutting_force_N': convert_value(test_df.get('cutting_force_N', 200)),
         }
 
         # Prepare SQL INSERT dynamically
         columns = ', '.join(important_features.keys())
         placeholders = ', '.join(['%s'] * len(important_features))
-        # values = [v.item() if isinstance(v, (np.generic, np.bool_)) else v for v in important_features.values()]
-        values = []
-        for v in important_features.values():
-            if isinstance(v, (np.integer, np.int32, np.int64)):
-                values.append(int(v))
-            elif isinstance(v, (np.float32, np.float64)):
-                values.append(float(v))
-            elif isinstance(v, (np.bool_)):
-                values.append(bool(v))
-            else:
-                values.append(v)
-
-
-        logger.info(f"Inserting values: {values}")
+        values = list(important_features.values())
 
         # Build query
         query = f'''
@@ -351,7 +350,7 @@ def process_machine_unit(machine_id, row_idx):
         # Execute
         cursor.execute(query, values)
                 
-        # Update the row index in the 'Pointers' table
+        # Update the row index in the 'factory' table
         cursor.execute('''
             UPDATE factory 
             SET row_idx = %s 
