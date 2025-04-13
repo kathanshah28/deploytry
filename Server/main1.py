@@ -232,18 +232,31 @@ def process_machine_unit(machine_id, row_idx):
         cursor = conn.cursor()
         
         # Select important features to store alongside predictions
+        # important_features = {
+        #     'id': machine_id,
+        #     'timestamp': test_df['id'],
+        #     'anomaly_score': results['anomaly_score'],
+        #     'predicted_anomaly': results['predicted_anomaly'],
+        #     'predicted_anomaly_type': results['predicted_anomaly_type'], 
+        #     'predicted_health_score': results['predicted_health_score'],
+        #     'predicted_days_to_maintenance': results['predicted_days_to_maintenance'],
+        #     'motor_temp_C': float(test_df.get('motor_temp_C', 60)),
+        #     'power_consumption_W': float(test_df.get('power_consumption_W', 5000)),
+        #     'cutting_force_N': float(test_df.get('cutting_force_N', 200)),
+        # }
         important_features = {
             'id': machine_id,
             'timestamp': test_df['id'],
-            'anomaly_score': results['anomaly_score'],
-            'predicted_anomaly': results['predicted_anomaly'],
-            'predicted_anomaly_type': results['predicted_anomaly_type'], 
-            'predicted_health_score': results['predicted_health_score'],
-            'predicted_days_to_maintenance': results['predicted_days_to_maintenance'],
+            'anomaly_score': float(results['anomaly_score']),
+            'predicted_anomaly': str(results['predicted_anomaly']),
+            'predicted_anomaly_type': str(results['predicted_anomaly_type']), 
+            'predicted_health_score': float(results['predicted_health_score']),
+            'predicted_days_to_maintenance': float(results['predicted_days_to_maintenance']),
             'motor_temp_C': float(test_df.get('motor_temp_C', 60)),
             'power_consumption_W': float(test_df.get('power_consumption_W', 5000)),
             'cutting_force_N': float(test_df.get('cutting_force_N', 200)),
         }
+
         
         # Prepare SQL INSERT dynamically
         columns = ', '.join(important_features.keys())
