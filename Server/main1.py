@@ -327,7 +327,18 @@ def process_machine_unit(machine_id, row_idx):
         # Prepare SQL INSERT dynamically
         columns = ', '.join(important_features.keys())
         placeholders = ', '.join(['%s'] * len(important_features))
-        values = [v.item() if isinstance(v, (np.generic, np.bool_)) else v for v in important_features.values()]
+        # values = [v.item() if isinstance(v, (np.generic, np.bool_)) else v for v in important_features.values()]
+        values = []
+        for v in important_features.values():
+            if isinstance(v, (np.integer, np.int32, np.int64)):
+                values.append(int(v))
+            elif isinstance(v, (np.float32, np.float64)):
+                values.append(float(v))
+            elif isinstance(v, (np.bool_)):
+                values.append(bool(v))
+            else:
+                values.append(v)
+
 
         logger.info(f"Inserting values: {values}")
 
