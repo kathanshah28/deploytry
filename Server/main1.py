@@ -334,7 +334,7 @@ def process_machine_unit(machine_id, row_idx):
             'id': str(machine_id),
             'timestamp': str(test_df['timestamp']),  # Ensure timestamp is string
             'anomaly_score': convert_value(results['anomaly_score']),
-            'predicted_anamoly': str(results['predicted_anomaly']),
+            'predicted_anomaly': str(results['predicted_anomaly']),
             'predicted_anomaly_type': str(results['predicted_anomaly_type']), 
             'predicted_health_score': convert_value(results['predicted_health_score']),
             'predicted_days_to_maintenance': convert_value(results['predicted_days_to_maintenance']),
