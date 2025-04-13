@@ -212,11 +212,91 @@ def get_db_connection():
     return conn
 
 # Function to process a single machine unit
+# def process_machine_unit(machine_id, row_idx):
+#     try:
+#         # Read the CSV file
+#         df = pd.read_csv(CSV_FILE_PATH)
+#         # df = df[feature_columns]
+
+#         # Check if the row_idx is valid
+#         if row_idx >= len(df):
+#             logger.warning(f"Row index {row_idx} out of bounds for machine {machine_id}")
+#             return False
+        
+#         # Extract features for the specific row
+#         test_df = df.iloc[row_idx]
+#         results = make_predictions(test_df, models)
+    
+#         # Store predictions in the database
+#         conn = get_db_connection()
+#         cursor = conn.cursor()
+        
+#         # Select important features to store alongside predictions
+#         # important_features = {
+#         #     'id': machine_id,
+#         #     'timestamp': test_df['id'],
+#         #     'anomaly_score': results['anomaly_score'],
+#         #     'predicted_anomaly': results['predicted_anomaly'],
+#         #     'predicted_anomaly_type': results['predicted_anomaly_type'], 
+#         #     'predicted_health_score': results['predicted_health_score'],
+#         #     'predicted_days_to_maintenance': results['predicted_days_to_maintenance'],
+#         #     'motor_temp_C': float(test_df.get('motor_temp_C', 60)),
+#         #     'power_consumption_W': float(test_df.get('power_consumption_W', 5000)),
+#         #     'cutting_force_N': float(test_df.get('cutting_force_N', 200)),
+#         # }
+#         important_features = {
+#             'id': machine_id,
+#             'timestamp': test_df['id'],
+#             'anomaly_score': float(results['anomaly_score']),
+#             'predicted_anomaly': str(results['predicted_anomaly']),
+#             'predicted_anomaly_type': str(results['predicted_anomaly_type']), 
+#             'predicted_health_score': float(results['predicted_health_score']),
+#             'predicted_days_to_maintenance': float(results['predicted_days_to_maintenance']),
+#             'motor_temp_C': float(test_df.get('motor_temp_C', 60)),
+#             'power_consumption_W': float(test_df.get('power_consumption_W', 5000)),
+#             'cutting_force_N': float(test_df.get('cutting_force_N', 200)),
+#         }
+
+        
+#         # Prepare SQL INSERT dynamically
+#         columns = ', '.join(important_features.keys())
+#         placeholders = ', '.join(['%s'] * len(important_features))
+#         # values = list(important_features.values())
+
+#         # Convert all numpy types to native Python types
+#         values = [v.item() if isinstance(v, (np.generic, np.bool_)) else v for v in important_features.values()]
+
+
+#         # Build query
+#         query = f'''
+#             INSERT INTO machine ({columns})
+#             VALUES ({placeholders})
+#         '''
+
+#         # Execute
+#         cursor.execute(query, values)
+                
+#         # Update the row index in the 'Pointers' table
+#         cursor.execute('''
+#             UPDATE factory 
+#             SET row_idx = %s 
+#             WHERE id = %s
+#         ''', ((row_idx + 1) % 10000, machine_id))
+        
+#         conn.commit()
+#         conn.close()
+        
+#         logger.info(f"Processed machine_id: {machine_id}, row_idx: {row_idx}, is_anomaly: {is_anomaly}")
+#         return True
+    
+#     except Exception as e:
+#         logger.error(f"Error processing machine {machine_id}: {e}")
+#         return False
+
 def process_machine_unit(machine_id, row_idx):
     try:
         # Read the CSV file
         df = pd.read_csv(CSV_FILE_PATH)
-        # df = df[feature_columns]
 
         # Check if the row_idx is valid
         if row_idx >= len(df):
@@ -231,19 +311,6 @@ def process_machine_unit(machine_id, row_idx):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Select important features to store alongside predictions
-        # important_features = {
-        #     'id': machine_id,
-        #     'timestamp': test_df['id'],
-        #     'anomaly_score': results['anomaly_score'],
-        #     'predicted_anomaly': results['predicted_anomaly'],
-        #     'predicted_anomaly_type': results['predicted_anomaly_type'], 
-        #     'predicted_health_score': results['predicted_health_score'],
-        #     'predicted_days_to_maintenance': results['predicted_days_to_maintenance'],
-        #     'motor_temp_C': float(test_df.get('motor_temp_C', 60)),
-        #     'power_consumption_W': float(test_df.get('power_consumption_W', 5000)),
-        #     'cutting_force_N': float(test_df.get('cutting_force_N', 200)),
-        # }
         important_features = {
             'id': machine_id,
             'timestamp': test_df['id'],
@@ -257,15 +324,12 @@ def process_machine_unit(machine_id, row_idx):
             'cutting_force_N': float(test_df.get('cutting_force_N', 200)),
         }
 
-        
         # Prepare SQL INSERT dynamically
         columns = ', '.join(important_features.keys())
         placeholders = ', '.join(['%s'] * len(important_features))
-        # values = list(important_features.values())
-
-        # Convert all numpy types to native Python types
         values = [v.item() if isinstance(v, (np.generic, np.bool_)) else v for v in important_features.values()]
 
+        logger.info(f"Inserting values: {values}")
 
         # Build query
         query = f'''
@@ -286,7 +350,7 @@ def process_machine_unit(machine_id, row_idx):
         conn.commit()
         conn.close()
         
-        logger.info(f"Processed machine_id: {machine_id}, row_idx: {row_idx}, is_anomaly: {is_anomaly}")
+        logger.info(f"Processed machine_id: {machine_id}, row_idx: {row_idx}, is_anomaly: {results['predicted_anomaly']}")
         return True
     
     except Exception as e:
