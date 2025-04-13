@@ -175,6 +175,7 @@ import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 from dotenv import load_dotenv
+import numpy as np
 
 import sys
 # import os
